@@ -10,7 +10,7 @@ public class Main {
         MatrixMultiplication nm = new MatrixMultiplication();
         //System.out.println(Arrays.deepToString(nm.normal(a, b)));
         long start = System.currentTimeMillis();
-        nm.normal(a,b);
+        nm.tiledMultiplication(a,b,25);
         System.out.println(System.currentTimeMillis()-start + " ms");
     }
 
