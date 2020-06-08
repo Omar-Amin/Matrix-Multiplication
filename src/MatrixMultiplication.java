@@ -1,3 +1,7 @@
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MatrixMultiplication {
 
@@ -138,6 +142,72 @@ public class MatrixMultiplication {
         }
 
 
+        return c;
+    }
+
+    public int[][] threadTiledTransposedMultiplication(int[][] a,int[][] b,int tileSize){
+
+        final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        int[][] newB = new int[b[0].length][b.length];
+
+        for (int i = 0; i < b.length; i++) {
+            for (int j = 0; j < b[0].length ; j++) {
+                newB[j][i] = b[i][j];
+            }
+        }
+
+        int aCol = a[0].length;
+        int aRow = a.length;
+        int bCol = newB.length;
+
+        int acolTiles = aCol % tileSize == 0 ? aCol / tileSize : aCol / tileSize + 1;
+        int rowTiles = aRow % tileSize == 0 ? aRow / tileSize : aRow / tileSize + 1;
+        int bcolTiles = bCol % tileSize == 0 ? bCol / tileSize : bCol / tileSize + 1;
+
+
+        CountDownLatch countDownLatch = new CountDownLatch(rowTiles);
+
+        int[][] c = new int[aRow][bCol];
+
+        // fori in tiles
+        for (int rowT = 0; rowT < rowTiles; rowT++) {
+            int finalRowT = rowT;
+            // giving each thread to execute a row of tiles
+            executorService.execute(() -> {
+                for (int bcolT = 0; bcolT < bcolTiles; bcolT++) {
+                    for (int acolT = 0; acolT < acolTiles; acolT++) {
+                        // multiplication inside tile
+                        int currentaRow = Math.min((finalRowT +1)*(tileSize),aRow);
+                            int currentbCol = Math.min((bcolT +1)*(tileSize), bCol);
+                            int currentAcol = Math.min((acolT +1)*(tileSize),aCol);
+
+                            for (int i = finalRowT *tileSize; i < currentaRow; i++) {
+                                for (int j = bcolT *tileSize; j < currentbCol; j++) {
+                                    int cValue = 0;
+                                    for (int k = acolT *tileSize; k < currentAcol; k++) {
+                                        cValue += a[i][k]*newB[j][k];
+                                    }
+
+                                    // doesn't need synchronization since each thread does
+                                    // the incrementation inside its own thread
+                                    c[i][j] += cValue;
+
+                                }
+                            }
+                    }
+
+                }
+                countDownLatch.countDown();
+            });
+        }
+
+        try {
+            countDownLatch.await();
+            executorService.shutdownNow();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return c;
     }
 
