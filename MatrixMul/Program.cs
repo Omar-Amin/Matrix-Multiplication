@@ -10,10 +10,10 @@ namespace MatrixMul
             int[,] a = generateMatrix(5000, 700);
             int[,] b = generateMatrix(700, 5000);
 
-            MatrixMultiplication matrix = new MatrixMultiplication();
+            ThreadMatrixMultiplication matrix = new ThreadMatrixMultiplication();
             Stopwatch time = new Stopwatch();
             time.Start();
-            int[,] c = matrix.transposed(a, b);
+            int[,] c = matrix.threadTiledTransposedMultiplication(a, b, 25);
             time.Stop();
             Console.WriteLine(time.ElapsedMilliseconds);
         }
@@ -48,7 +48,7 @@ namespace MatrixMul
             }
         }
 
-        private static void outputToFile(int[,] c)
+        private static void outputToFile(int[,] c, string path)
         {
             int row = c.GetLength(0);
             int col = c.GetLength(1);
@@ -64,7 +64,7 @@ namespace MatrixMul
                 lines[i] = s;
             }
 
-            System.IO.File.WriteAllLines(@"C:\Users\Omar\Documents\Projects\Matrix-Multiplication\MatrixMul\test.txt", lines);
+            System.IO.File.WriteAllLines(path, lines);
         }
     }
 }
